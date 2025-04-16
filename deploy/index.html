@@ -1,0 +1,637 @@
+<!-- <!DOCTYPE html>
+<html>
+
+<head>
+  <title>Audio Capturer</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      overflow: hidden;
+      background: #0f0c29;
+      background: linear-gradient(45deg, #24243e, #0f0c29, #302b63);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .mic {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .mic:hover {
+      transform: scale(1.05);
+    }
+
+    .mic.recording {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .mic-outer-circle {
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      box-shadow:
+        0 0 30px rgba(138, 43, 226, 0.3),
+        inset 0 0 20px rgba(138, 43, 226, 0.2);
+      animation: rotate 10s linear infinite;
+    }
+
+    .mic.recording .mic-outer-circle {
+      background: rgba(255, 68, 68, 0.1);
+      box-shadow:
+        0 0 40px rgba(255, 68, 68, 0.4),
+        inset 0 0 25px rgba(255, 68, 68, 0.3);
+    }
+
+    @keyframes rotate {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .mic-icon {
+      position: relative;
+      width: 60px;
+      height: 60px;
+      background: #fff;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .mic.recording .mic-icon {
+      background: #ff4444;
+      box-shadow: 0 0 30px rgba(255, 68, 68, 0.5);
+    }
+
+    .mic-icon::before {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: currentColor;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5z'/%3E%3Cpath d='M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z'/%3E%3C/svg%3E") no-repeat 50% 50%;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5z'/%3E%3Cpath d='M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z'/%3E%3C/svg%3E") no-repeat 50% 50%;
+      transition: all 0.3s ease;
+    }
+
+    .mic.recording .mic-icon::before {
+      color: #fff;
+    }
+
+    .recording-status {
+      position: absolute;
+      bottom: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      white-space: nowrap;
+      opacity: 0.9;
+    }
+
+    .glow-effect {
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(138, 43, 226, 0.2) 0%, transparent 70%);
+      animation: glow 4s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes glow {
+      0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.5;
+      }
+
+      50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0.8;
+      }
+
+      100% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.5;
+      }
+    }
+
+    .visualizer-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      border-radius: 50%;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .visualizer-wave {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      mix-blend-mode: screen;
+      transform: scale(0.8);
+    }
+
+    .mic.recording .visualizer-wave {
+      opacity: 1;
+      animation: wave-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes wave-pulse {
+      0% {
+        transform: scale(0.8);
+      }
+
+      50% {
+        transform: scale(1);
+      }
+
+      100% {
+        transform: scale(0.8);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1
+    style="position: absolute; top: 10%; left: 50%; transform: translateX(-50%); color: #fff; font-family: 'Segoe UI', sans-serif; text-align: center;">
+    Audio Capturer
+    <div style="font-size: 1.2rem; margin-top: 0.5rem; opacity: 0.9;">Store and share your voice with this</div>
+    <div style="font-size: 1rem; margin-top: 1rem; font-style: italic; opacity: 0.7;">
+      "The human voice is the most beautiful instrument of all, but it is the most difficult to play." - Richard Strauss
+    </div>
+  </h1>
+  <div class="mic" id="micButton">
+    <div class="glow-effect"></div>
+    <div class="mic-outer-circle"></div>
+    <div class="mic-icon"></div>
+    <div class="visualizer-container">
+      <canvas class="visualizer-wave" id="visualizer"></canvas>
+    </div>
+    <div class="recording-status" id="status">Click to start recording</div>
+  </div>
+
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+    let audioContext;
+    let analyser;
+    let animationId;
+
+    const micButton = document.getElementById('micButton');
+    const status = document.getElementById('status');
+    const visualizer = document.getElementById('visualizer');
+    const canvasCtx = visualizer.getContext('2d');
+
+    function setupVisualizer(stream) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioContext.createAnalyser();
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      analyser.fftSize = 2048;
+
+      const bufferLength = analyser.fftSize;
+      const dataArray = new Uint8Array(bufferLength);
+
+      function draw() {
+        if (!isRecording) return;
+        animationId = requestAnimationFrame(draw);
+
+        analyser.getByteTimeDomainData(dataArray);
+
+        canvasCtx.clearRect(0, 0, visualizer.width, visualizer.height);
+
+        canvasCtx.lineWidth = 3;
+        canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        canvasCtx.beginPath();
+
+        const sliceWidth = visualizer.width * 1.0 / bufferLength;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+          const v = dataArray[i] / 128.0;
+          const y = v * visualizer.height / 2;
+          if (i === 0) {
+            canvasCtx.moveTo(x, y);
+          } else {
+            canvasCtx.lineTo(x, y);
+          }
+          x += sliceWidth;
+        }
+
+        canvasCtx.lineTo(visualizer.width, visualizer.height / 2);
+        canvasCtx.stroke();
+      }
+
+      draw();
+    }
+
+    // micButton.addEventListener('click', async () => {
+    //   if (isRecording) {
+    //     mediaRecorder.stop();
+    //     isRecording = false;
+    //     micButton.classList.remove('recording');
+    //     status.textContent = 'Click to start recording';
+    //     if (audioContext) audioContext.close();
+    //     cancelAnimationFrame(animationId);
+    //     return;
+    //   }
+
+    //   try {
+    //     // const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    //     // mediaRecorder = new MediaRecorder(stream);
+    //     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    //     mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+
+    //     audioChunks = [];
+
+    //     mediaRecorder.ondataavailable = event => {
+    //       if (event.data.size > 0) {
+    //         audioChunks.push(event.data);
+    //       }
+    //     };
+
+
+
+    //     mediaRecorder.start();
+    //     isRecording = true;
+    //     micButton.classList.add('recording');
+    //     status.textContent = 'Recording... Click to stop';
+    //     setupVisualizer(stream);
+    //   } catch (err) {
+    //     console.error('Error accessing microphone:', err);
+    //   }
+    // });
+    mediaRecorder.onstop = async () => {
+      console.log("Recording stopped. Sending to backend...");
+      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+      console.log("Blob size:", audioBlob.size);
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'recording.wav');
+
+      try {
+        const response = await fetch('/process-audio', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+        console.log(result);
+
+        mediaRecorder.start();
+        isRecording = true;
+        micButton.classList.add('recording');
+        status.textContent = 'Recording... Click to stop';
+        setupVisualizer(stream);
+
+        let resultText = '';
+        for (const [speaker, text] of Object.entries(result.speakers)) {
+          resultText += `<p><strong>${speaker}</strong>: ${text}</p>`;
+        }
+
+        document.body.insertAdjacentHTML(
+          'beforeend',
+          `<div style="color:white;position:absolute;bottom:5%;text-align:center;width:100%;">${resultText}</div>`
+        );
+
+      } catch (err) {
+        console.error('Transcription error:', err);
+      }
+
+    };
+  </script>
+</body>
+
+</html> -->
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Audio Capturer</title>
+  <style>
+    body {
+      background: linear-gradient(45deg, #24243e, #0f0c29, #302b63);
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .mic {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .mic.recording {
+      background: #ff4444;
+      box-shadow: 0 0 30px rgba(255, 68, 68, 0.5);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .status {
+      position: absolute;
+      bottom: -40px;
+      color: #fff;
+      font-size: 16px;
+      text-align: center;
+      width: 100%;
+    }
+
+    .result {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 16px;
+      text-align: left;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mic" id="micButton">
+    <span class="status" id="statusText">Click to start recording</span>
+  </div>
+  <div class="result" id="transcript" style="display: none;"></div>
+
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+    const micButton = document.getElementById("micButton");
+    const statusText = document.getElementById("statusText");
+    const transcriptBox = document.getElementById("transcript");
+
+    micButton.addEventListener("click", async () => {
+      if (isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        micButton.classList.remove("recording");
+        statusText.textContent = "Processing...";
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = event => {
+          if (event.data.size > 0) {
+            audioChunks.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          const formData = new FormData();
+          formData.append('audio', audioBlob, 'recording.webm');
+
+          try {
+            const response = await fetch('/process-audio', {
+              method: 'POST',
+              body: formData
+            });
+
+            const result = await response.json();
+            if (result && result.speakers) {
+              let output = "";
+              for (const [speaker, text] of Object.entries(result.speakers)) {
+                output += `<p><strong>${speaker}</strong>: ${text}</p>`;
+              }
+              transcriptBox.innerHTML = output;
+              transcriptBox.style.display = 'block';
+              statusText.textContent = "Click to record again";
+            } else {
+              statusText.textContent = "No speech detected.";
+            }
+          } catch (err) {
+            console.error('Error:', err);
+            statusText.textContent = "Error processing audio.";
+          }
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+        micButton.classList.add("recording");
+        statusText.textContent = "Recording... Click to stop";
+      } catch (err) {
+        console.error("Mic error:", err);
+        statusText.textContent = "Mic access denied.";
+      }
+    });
+  </script>
+</body>
+
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Speaker Transcriber</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(45deg, #0f0c29, #302b63);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .mic {
+      width: 150px;
+      height: 150px;
+      background: white;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .mic.recording {
+      background: #ff4444;
+      box-shadow: 0 0 30px rgba(255, 68, 68, 0.5);
+    }
+
+    .status {
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+
+    .result {
+      max-width: 90%;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="status" id="statusText">Click mic to start recording</div>
+  <div class="mic" id="micButton">🎤</div>
+  <div class="result" id="transcript" style="display:none;"></div>
+
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+
+    const micButton = document.getElementById('micButton');
+    const statusText = document.getElementById('statusText');
+    const transcriptBox = document.getElementById('transcript');
+
+    micButton.addEventListener('click', async () => {
+      if (isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        micButton.classList.remove("recording");
+        statusText.textContent = "Processing audio...";
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = e => {
+          if (e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          const formData = new FormData();
+          formData.append('audio', audioBlob, 'recording.webm');
+
+          try {
+            const res = await fetch('/process-audio', {
+              method: 'POST',
+              body: formData
+            });
+
+            const result = await res.json();
+
+            if (result.speakers) {
+              let html = '';
+              for (const [speaker, text] of Object.entries(result.speakers)) {
+                html += `<p><strong>${speaker}</strong>: ${text}</p>`;
+              }
+              transcriptBox.innerHTML = html;
+              transcriptBox.style.display = 'block';
+              statusText.textContent = "Click mic to record again";
+            } else {
+              statusText.textContent = "No speech detected.";
+            }
+          } catch (err) {
+            statusText.textContent = "Error processing audio.";
+            console.error(err);
+          }
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+        micButton.classList.add("recording");
+        statusText.textContent = "Recording... Click to stop";
+      } catch (err) {
+        console.error("Mic access error:", err);
+        statusText.textContent = "Mic permission denied or unavailable.";
+      }
+    });
+  </script>
+</body>
+
+</html>
