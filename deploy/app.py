@@ -171,7 +171,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 diarization_pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization-3.1",
-    use_auth_token="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"
+    use_auth_token="replace_hf_token"
 )
 diarization_pipeline.to(device)
 
